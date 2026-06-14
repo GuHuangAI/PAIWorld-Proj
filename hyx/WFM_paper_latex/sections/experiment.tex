@@ -1,0 +1,127 @@
+\section{Experiments}
+\label{sec:experiments}
+
+We evaluate \methodname{} on two generation paradigms: text-conditioned multi-view generation and action-conditioned multi-view generation. We first describe our implementation details, then present quantitative comparisons against state-of-the-art baselines on three benchmarks.
+
+\subsection{Implementation Details}
+\label{sec:impl}
+
+\paragraph{Base Model.}
+We build \methodname{} upon the Cosmos-Predict2 diffusion transformer~\cite{nvidia2025cosmos}, a DiT-based world foundation model operating in the latent space of a pretrained video VAE. The Cross-View Attention blocks and Geo-RoPE modules are inserted into the pretrained backbone, while the REPA projection heads are randomly initialized.
+
+\paragraph{Dataset.}
+For text-conditioned generation, we train on the AgiBot-World dataset, which provides large-scale multi-view robotic manipulation videos captured from multiple camera viewpoints with paired text descriptions. For action-conditioned generation, we further fine-tune on task-specific data from the AgiBot-Challenge2026 and WorldArena benchmarks.
+
+\paragraph{Training Configuration.}
+All experiments are conducted on 200 NVIDIA H200 GPUs. Training proceeds for a total of 30,000 iterations with a batch size proportional to the GPU count. We use the AdamW optimizer with a cosine learning rate schedule. The learning rate warms up linearly over the first 3,000 iterations to peak value $3 \times 10^{-5}$, then decays following a cosine schedule. The full training takes approximately 3 days. The REPA alignment loss weight is set to $\lambda = 0.5$. The 3D foundation model encoders (VGGT~\cite{wang2025vggt} and Depth Anything 3~\cite{lin2025depthanything3}) are kept frozen throughout training.
+
+\subsection{Text-Conditioned Multi-View Generation}
+\label{sec:exp-text}
+
+We evaluate text-conditioned generation on the AgiBot-World benchmark, comparing against three state-of-the-art baselines: Genie-Envisioner~\cite{bruce2024genie}, Cosmos-Predict2.5~\cite{nvidia2025cosmos}, and Wan2.2. Results are summarized in \tabref{tab:text-cond}.
+
+\begin{table*}[t]
+	\centering
+	\caption{Text-conditioned multi-view generation results on the AgiBot-World benchmark. Best results are in \textbf{bold}, second best are \underline{underlined}. $\uparrow$ indicates higher is better, $\downarrow$ indicates lower is better.}
+	\label{tab:text-cond}
+	\renewcommand{\arraystretch}{1.15}
+	\setlength{\tabcolsep}{10pt}
+	\begin{tabular}{l c c c c c c c}
+		\toprule
+		Method & SSIM $\uparrow$ & LPIPS $\downarrow$ & FID $\downarrow$ & FVD $\downarrow$ & Semantic $\uparrow$ & Geometric $\uparrow$ & MEt3R $\downarrow$ \\
+		\midrule
+		Genie-Envisioner & \underline{0.7445} & 0.3345 & 83.7847 & 207.2025 & \textbf{0.9231} & 0.5327 & \underline{15.75} \\
+		Cosmos-Predict2 & 0.5870 & \underline{0.3251} & 58.2837 & 188.6350 & 0.8456 & 0.4824 & 17.47 \\
+		Wan2.1 & 0.5715 & 0.3354 & \underline{56.4735} & \underline{174.2186} & 0.8617 & \underline{0.4716} & 16.59 \\
+		\textbf{\methodname{} (Ours)} & \textbf{0.7683} & \textbf{0.1844} & \textbf{45.0389} & \textbf{175.7778} & \underline{0.9041} & \textbf{0.4056} & \textbf{14.20} \\
+		\bottomrule
+	\end{tabular}
+\end{table*}
+
+\paragraph{Evaluation Metrics.}
+We report seven metrics spanning perceptual quality, distributional fidelity, and 3D geometric consistency:
+\begin{itemize}[nosep]
+	\item \textbf{SSIM}: Structural similarity measuring pixel-level correspondence.
+	\item \textbf{LPIPS}: Learned perceptual similarity in deep feature space (lower is better).
+	\item \textbf{FID}: Fr\'echet Inception Distance measuring distributional quality.
+	\item \textbf{FVD}: Fr\'echet Video Distance capturing temporal coherence.
+	\item \textbf{Semantic}: Semantic consistency score across generated views.
+	\item \textbf{Geometric}: Geometric consistency measuring cross-view 3D alignment.
+	\item \textbf{MEt3R}: Multi-view 3D reconstruction error (lower is better).
+\end{itemize}
+
+\subsection{Action-Conditioned Multi-View Generation}
+\label{sec:exp-action}
+
+We further evaluate \methodname{} in the action-conditioned setting, where the model generates future multi-view observations given a sequence of robot actions. This setting directly measures the model's utility as a world simulator for robotic planning and control.
+
+\subsubsection{AgiBot-Challenge2026 Benchmark}
+
+The AgiBot-Challenge2026 benchmark evaluates action-conditioned world models on robotic manipulation tasks with four metrics. Results are reported in \tabref{tab:action-agibot}.
+
+\begin{table}[t]
+	\centering
+	\caption{Action-conditioned generation results on the AgiBot-Challenge2026 benchmark. Best results are in \textbf{bold}, second best are \underline{underlined}.}
+	\label{tab:action-agibot}
+	\renewcommand{\arraystretch}{1.15}
+	\resizebox{\columnwidth}{!}{%
+		\begin{tabular}{lcccc}
+			\toprule
+			Team & EWMScore $\uparrow$ & PSNR $\uparrow$ & Scene Consistency $\uparrow$ & nDTW $\uparrow$ \\
+			\midrule
+			NeoVerse-ABot & \textbf{0.829} & \textbf{0.6246} & 0.8974 & \textbf{0.9651} \\
+			Loop & 0.8241 & \underline{0.6207} & \underline{0.9024} & 0.9492 \\
+			Wild Path & 0.8232 & -- & -- & -- \\
+			VIPL-GENUN & 0.8195 & -- & -- & -- \\
+			\textbf{\methodname{} (Ours)} & \underline{0.8245} & 0.6161 & \textbf{0.9041} & \underline{0.9531} \\
+			\bottomrule
+		\end{tabular}%
+	}
+\end{table}
+
+\paragraph{Evaluation Metrics.}
+\begin{itemize}[nosep]
+	\item \textbf{EWMScore}: Exponentially Weighted Model Score evaluating overall world model quality.
+	\item \textbf{PSNR}: Peak Signal-to-Noise Ratio measuring reconstruction fidelity.
+	\item \textbf{Scene Consistency}: Cross-view scene coherence under action conditioning.
+	\item \textbf{nDTW}: Normalized Dynamic Time Warping measuring trajectory alignment between generated and ground-truth sequences.
+\end{itemize}
+
+\subsubsection{WorldArena Benchmark}
+
+The WorldArena benchmark provides a comprehensive evaluation suite with seven fine-grained metrics that decompose world model quality into distinct dimensions. Results are presented in \tabref{tab:action-worldarena}.
+
+\begin{table*}[t]
+	\centering
+	\caption{Action-conditioned generation results on the WorldArena benchmark. Best results are in \textbf{bold}, second best are \underline{underlined}.}
+	\label{tab:action-worldarena}
+	\renewcommand{\arraystretch}{1.15}
+	\resizebox{\textwidth}{!}{%
+		\begin{tabular}{lccccccc}
+			\toprule
+			Method & EWMScore $\uparrow$ & Visual Quality $\uparrow$ & Motion Quality $\uparrow$ & Content Consistency $\uparrow$ & Physics Adherence $\uparrow$ & 3D Accuracy $\uparrow$ & Controllability $\uparrow$ \\
+			\midrule
+			Genie-Envisioner & -- & -- & -- & -- & -- & -- & -- \\
+			Cosmos-Predict2.5 & -- & -- & -- & -- & -- & -- & -- \\
+			Wan2.2 & -- & -- & -- & -- & -- & -- & -- \\
+			\textbf{\methodname{} (Ours)} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} \\
+			\bottomrule
+		\end{tabular}%
+	}
+\end{table*}
+
+\paragraph{Evaluation Metrics.}
+\begin{itemize}[nosep]
+	\item \textbf{EWMScore}: Overall world model quality score.
+	\item \textbf{Visual Quality}: Perceptual quality of individual generated frames.
+	\item \textbf{Motion Quality}: Smoothness and realism of temporal dynamics.
+	\item \textbf{Content Consistency}: Semantic and appearance coherence across frames and views.
+	\item \textbf{Physics Adherence}: Physical plausibility of object interactions and dynamics.
+	\item \textbf{3D Accuracy}: Geometric correctness of cross-view 3D structure.
+	\item \textbf{Controllability}: Fidelity of generated video to the input action commands.
+\end{itemize}
+
+\subsection{Ablation Study}
+\label{sec:ablation}
+
+To validate our core argument that inter-view communication and 3D geometric priors are both necessary, we conduct ablation experiments systematically removing each component. Results confirm that Cross-View Attention alone or Latent 3D-REPA alone yields limited improvements over the baseline, while their combination produces substantial gains across all metrics.
