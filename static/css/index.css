@@ -447,6 +447,16 @@ video {
   color: #53616a;
 }
 
+.method-module-intro {
+  max-width: 860px;
+  margin: 1.45rem auto 1rem;
+  color: #43505a;
+  font-size: 1.06rem;
+  line-height: 1.72;
+  text-align: center;
+  font-weight: 780;
+}
+
 .figure-panel {
   max-width: 1120px;
   margin: 0 auto;
@@ -478,6 +488,7 @@ video {
 .method-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   max-width: 1120px;
+  margin-top: 1.4rem;
   margin-right: auto;
   margin-left: auto;
 }
@@ -682,6 +693,15 @@ video {
   font-size: clamp(1.3rem, 1.7vw, 1.55rem);
   line-height: 1.2;
   font-weight: 880;
+}
+
+.demo-minor-heading {
+  margin: 1.35rem 0 0.2rem;
+  color: #32424b;
+  font-size: 1.12rem;
+  line-height: 1.25;
+  font-weight: 820;
+  text-align: left;
 }
 
 .video-grid {

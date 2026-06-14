@@ -103,7 +103,6 @@
         </div>
         <div class="section-heading">
           <h2>Abstract</h2>
-          <p>Multi-view world models need geometry, not token concatenation.</p>
         </div>
         <p class="abstract-text">
           World foundation models are powerful simulators for physical environments, but most existing systems operate in
@@ -148,9 +147,28 @@
       <div class="container is-max-widescreen">
         <div class="section-heading">
           <h2>Overview</h2>
+        </div>
+
+        <figure class="figure-panel">
+          <img src="./static/images/paiworld/teaser.png" alt="PAIWorld overview teaser">
+          <figcaption>
+            PAIWorld is a 3D-consistent multi-view world foundation model for robotic manipulation. Pre-trained on 2.5M
+            multi-view video clips, PAIWorld serves as a versatile backbone for a range of downstream applications:
+            multi-view world generation, world action modeling, robotic planning, and policy post-training. Across these
+            settings, PAIWorld maintains cross-view 3D consistency: coherent object placement, depth, and texture across
+            all viewpoints, making its imagined rollouts physically plausible for embodied decision-making.
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section method-section" id="method">
+      <div class="container is-max-widescreen">
+        <div class="section-heading">
+          <h2>Method</h2>
           <p>
-            PAIWorld keeps the pretrained world model intact at initialization and adds lightweight modules that let views
-            exchange information in a shared geometric reference frame.
+            PAIWorld keeps the pretrained world model intact at initialization and adds lightweight modules that let
+            views exchange information in a shared geometric reference frame.
           </p>
         </div>
 
@@ -161,15 +179,8 @@
             attention, and latent 3D representation alignment.
           </figcaption>
         </figure>
-      </div>
-    </section>
 
-    <section class="section method-section" id="method">
-      <div class="container is-max-widescreen">
-        <div class="section-heading">
-          <h2>Method</h2>
-          <p>Three modules for multi-view 3D consistency.</p>
-        </div>
+        <p class="method-module-intro">Three modules for multi-view 3D consistency.</p>
 
         <div class="method-grid">
           <article>
@@ -694,27 +705,21 @@
             <h4>World model generation</h4>
             <div class="video-grid">
               <article class="video-card">
-                <h3>Episode 206</h3>
                 <video class="lazy-video" controls preload="none" playsinline data-src="./hyx/worldarena/vis/episode206.mp4"></video>
               </article>
               <article class="video-card">
-                <h3>Episode 530</h3>
                 <video class="lazy-video" controls preload="none" playsinline data-src="./hyx/worldarena/vis/episode530.mp4"></video>
               </article>
               <article class="video-card">
-                <h3>Episode 891</h3>
                 <video class="lazy-video" controls preload="none" playsinline data-src="./hyx/worldarena/vis/episode891.mp4"></video>
               </article>
               <article class="video-card">
-                <h3>Episode 369</h3>
                 <video class="lazy-video" controls preload="none" playsinline data-src="./hyx/worldarena/vis/episode369.mp4"></video>
               </article>
               <article class="video-card">
-                <h3>Episode 585</h3>
                 <video class="lazy-video" controls preload="none" playsinline data-src="./hyx/worldarena/vis/episode585.mp4"></video>
               </article>
               <article class="video-card">
-                <h3>Episode 800</h3>
                 <video class="lazy-video" controls preload="none" playsinline data-src="./hyx/worldarena/vis/episode800.mp4"></video>
               </article>
             </div>
@@ -725,27 +730,21 @@
             <div class="gif-grid">
               <article>
                 <img src="./hyx/worldarena/reconstruction/episode381.gif" alt="WorldArena episode 381 reconstruction">
-                <h3>Episode 381</h3>
               </article>
               <article>
                 <img src="./hyx/worldarena/reconstruction/episode401.gif" alt="WorldArena episode 401 reconstruction">
-                <h3>Episode 401</h3>
               </article>
               <article>
                 <img src="./hyx/worldarena/reconstruction/episode421.gif" alt="WorldArena episode 421 reconstruction">
-                <h3>Episode 421</h3>
               </article>
               <article>
                 <img src="./hyx/worldarena/reconstruction/episode441.gif" alt="WorldArena episode 441 reconstruction">
-                <h3>Episode 441</h3>
               </article>
               <article>
                 <img src="./hyx/worldarena/reconstruction/episode461.gif" alt="WorldArena episode 461 reconstruction">
-                <h3>Episode 461</h3>
               </article>
               <article>
                 <img src="./hyx/worldarena/reconstruction/episode481.gif" alt="WorldArena episode 481 reconstruction">
-                <h3>Episode 481</h3>
               </article>
             </div>
           </div>
@@ -762,26 +761,22 @@
             <div class="gif-grid">
               <article>
                 <img src="./hyx/agi-challenge/wm-gen-1.gif" alt="AgiBot-Challenge world model generation example 1">
-                <h3>World Model Generation 1</h3>
               </article>
               <article>
                 <img src="./hyx/agi-challenge/wm-gen-2.gif" alt="AgiBot-Challenge world model generation example 2">
-                <h3>World Model Generation 2</h3>
               </article>
             </div>
+            <h5 class="demo-minor-heading">Multi-view generation</h5>
             <div class="video-grid">
               <article class="video-card">
-                <h3>Multiview Generation 1</h3>
                 <video class="lazy-video" controls preload="none" playsinline data-src="./hyx/multiview1/combined.mp4"></video>
                 <img class="card-gif" src="./hyx/multiview1/3d.gif" alt="Multiview 1 3D reconstruction">
               </article>
               <article class="video-card">
-                <h3>Multiview Generation 2</h3>
                 <video class="lazy-video" controls preload="none" playsinline data-src="./hyx/multiview2/combined.mp4"></video>
                 <img class="card-gif" src="./hyx/multiview2/3d.gif" alt="Multiview 2 3D reconstruction">
               </article>
               <article class="video-card">
-                <h3>Multiview Generation 3</h3>
                 <video class="lazy-video" controls preload="none" playsinline data-src="./hyx/multiview3/combined.mp4"></video>
                 <img class="card-gif" src="./hyx/multiview3/3d.gif" alt="Multiview 3 3D reconstruction">
               </article>
@@ -793,11 +788,9 @@
             <div class="gif-grid">
               <article>
                 <img src="./hyx/agi-challenge/input-gen-comparison-1.gif" alt="AgiBot-Challenge input generation comparison 1">
-                <h3>Input Comparison 1</h3>
               </article>
               <article>
                 <img src="./hyx/agi-challenge/input-gen-comparison-2.gif" alt="AgiBot-Challenge input generation comparison 2">
-                <h3>Input Comparison 2</h3>
               </article>
             </div>
           </div>
@@ -807,11 +800,9 @@
             <div class="gif-grid">
               <article>
                 <img src="./hyx/agi-challenge/multi-sample-scene-consistence.gif" alt="AgiBot-Challenge scene consistency example 1">
-                <h3>Scene Consistency 1</h3>
               </article>
               <article>
                 <img src="./hyx/agi-challenge/multi-sample-scene-consistence-2.gif" alt="AgiBot-Challenge scene consistency example 2">
-                <h3>Scene Consistency 2</h3>
               </article>
             </div>
           </div>

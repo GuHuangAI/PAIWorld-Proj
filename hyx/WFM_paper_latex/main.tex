@@ -1,77 +1,19 @@
-\documentclass[lettersize,journal]{IEEEtran}
+\documentclass{iaii_pai}
+
+% === Additional packages not in cls ===
 \usepackage{amsmath,amsfonts}
-% \usepackage[pagebackref,breaklinks,colorlinks,citecolor=cvprblue]{hyperref}
-\usepackage[colorlinks,
-            linkcolor=red,
-            anchorcolor=blue,
-            citecolor=green
-            ]{hyperref}
-\usepackage{hyperref}
-% \usepackage{algorithmic}
-\usepackage{algorithm}
-\usepackage{array}
-\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
-\usepackage{textcomp}
-\usepackage{stfloats}
-\usepackage{url}
-\usepackage{verbatim}
-\usepackage{graphicx}
-\usepackage{cite}
-% \usepackage{algorithm2e}
-\usepackage{algpseudocode}  
-\usepackage[percent]{overpic}
-% \usepackage{caption}
-%\usepackage{xcolor}
-% \usepackage[square]{natbib}
-\usepackage{enumitem}
-\usepackage{tikz}
-\usepackage{adjustbox}
-\usepackage{cleveref}
-\usepackage{multirow}
-% \usepackage{abstract}
-
-% === Math ===
-\usepackage{amsmath,amsfonts}
-
-% === Hyperlinks ===
-\usepackage[colorlinks,
-            linkcolor=red,
-            anchorcolor=blue,
-            citecolor=green
-            ]{hyperref}
-
-% === Algorithms ===
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-
-% === Figures & Tables ===
-\usepackage{graphicx}
-\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
-\usepackage{caption}
-\usepackage{array}
-\usepackage{stfloats}
-\usepackage{booktabs}
-
-% === Misc ===
-\usepackage{textcomp}
-\usepackage{url}
-\usepackage{verbatim}
-\usepackage{cite}
-\usepackage[percent]{overpic}
 \usepackage{enumitem}
 \usepackage{tikz}
 \usepackage{adjustbox}
-\usepackage{multirow}
-
-% === Cross-references (load after hyperref) ===
-\usepackage{cleveref}
+\usepackage[percent]{overpic}
 
 % === Convenience Macros ===
 \newcommand{\figref}[1]{\cref{#1}}
 \newcommand{\tabref}[1]{\cref{#1}}
 \newcommand{\eqnref}[1]{\cref{#1}}
 \newcommand{\secref}[1]{\cref{#1}}
-% \newcommand{\algref}[1]{\cref{#1}}
 
 % === Paper-Specific Macros ===
 \newcommand{\methodname}{PAIWorld}
@@ -90,49 +32,26 @@
 % === Graphics Path ===
 \graphicspath{{figures/}}
 
-\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
-% updated with editorial comments 8/9/2021
+% === Title ===
+\title{PAIWorld: A 3D-Consistent Multi-View World Foundation Model for Robotic Manipulation}
+
+% === Authors ===
+\author[1]{The PAI Lab}
+
+% === Affiliations ===
+\affiliation[1]{Institute of AI for Industries, Chinese Academy of Sciences}
+
+% === Metadata ===
+\date{June 2026}
+
+% === Abstract ===
+\abstract{%
+World foundation models (WFMs) have emerged as powerful simulators of physical environments, yet they predominantly operate in a single-view setting and lack the multi-view 3D consistency that robotic manipulation demands. Robotic systems inherently rely on multiple cameras---egocentric, eye-to-hand, and wrist-mounted---to capture complementary viewpoints for policy learning. Current multi-view world models, however, simply concatenate view tokens without explicit geometric reasoning, yielding cross-view object drift, depth inconsistency, and texture misalignment that propagate errors into downstream planning and control. We trace these failures to two fundamental deficiencies: (1)~the absence of an explicit \emph{inter-view communication mechanism}, which forces each viewpoint to generate in isolation, and (2)~the absence of a \emph{3D geometric prior}, which leaves the model without guidance on what constitutes physically correct cross-view structure. We argue that resolving both is necessary and sufficient: an information pathway across views and a geometric signal that steers it must coexist, since communication without geometric guidance collapses to trivial shortcuts, while geometric priors without an inter-view channel cannot propagate constraints across viewpoints. Building on this analysis, we present \methodname{}, a framework that augments diffusion-transformer world models with three components: \textbf{Geometric Rotary Position Embedding} encodes camera ray directions and extrinsic poses into the attention mechanism via rotary position encoding; \textbf{Geometry-Aware Cross-View Attention} blocks provide explicit inter-view communication channels; and \textbf{Latent 3D-REPA} distills 3D-aware features from frozen 3D foundation models as the geometric learning signal. Built upon the Cosmos world foundation model, \methodname{} attains state-of-the-art multi-view 3D consistency on robotic manipulation benchmarks and enables downstream applications including model-based planning, world action models, and multi-view policy post-training.%
+}
 
 \begin{document}
-\title{PAIWorld: 3D-Consistent Multi-View World Foundation Model for Robotic Manipulation}
-
-\author{PAI Team\\
-Institute of AI for Industries, Chinese Academy of Sciences
-}
-% \author{Yuhang Huang, Xinwang Liu,~\IEEEmembership{Senior Member,~IEEE}, Kai Xu$^{*}$\thanks{$*$ Corresponding author (E-mail: kevin.kai.xu@gmail.com).},~\IEEEmembership{Senior Member,~IEEE}
-% \thanks{Y. Huang, S. Zou, X. Liu, and K. Xu are with the College of Computer Science and Technology, National University of Defense Technology, Changsha, 410073, China. %X. Xu and X. Chen are with the Hunan University of Technology and Business, Changsha, 410205.
-% }
-% \\College of Computer Science and Technology, National University of Defense Technology
-% \thanks{This paper was produced by the IEEE Publication Technology Group. They are in Piscataway, NJ.}% <-this % stops a space
-% \thanks{Manuscript received April 19, 2021; revised August 16, 2021.}
-% }
-
-% The paper headers
-\markboth{Journal of \LaTeX\ Class Files,~Vol.~14, No.~8, August~2021}%
-{Shell \MakeLowercase{\textit{et al.}}: A Sample Article Using IEEEtran.cls for IEEE Journals}
-
-% \IEEEpubid{0000--0000/00\$00.00~\copyright~2021 IEEE}
-% Remember, if you use this you must call \IEEEpubidadjcol in the second
-% column for its text to clear the IEEEpubid mark.
-
-% \maketitle
-% \begin{figure*}[h]
-%     \centering
-%     % \includegraphics[width=1.\linewidth]{figures/teaser-cvpr.pdf}%\vspace{-10pt}
-%     \includegraphics[width=1.\linewidth]{figures/figure1.pdf}%\vspace{-10pt}
-%     \caption{High-quality images generated by the proposed DDMs under few-step settings. (a) 10-step unconditioned generation on the CIFAR-10 and CelebA-HQ-256 datasets. (b) 5-step conditioned tasks  %Generated samples on both unconditioned and conditioned tasks. \textbf{(a)}: DDMs can generate high-quality images on CIFAR-10 and CelebA-HQ-256 with only 10 steps. \textbf{(b)}: For conditioned tasks, DDMs only use 5 steps for generating high-quality results 
-%     including saliency detection, image inpainting and super-resolution.}%\vspace{-15pt}
-%     \label{fig:top}
-% \end{figure*}
 
 \maketitle
-\input{sections/abstract}
-
-% \begin{IEEEkeywords}
-
-% \end{IEEEkeywords}
-
-
 
 \input{sections/introduction}
 \input{sections/related-work}
@@ -140,120 +59,15 @@ Institute of AI for Industries, Chinese Academy of Sciences
 \input{sections/experiment}
 \input{sections/conclusion}
 
-% \input{appendix/exp_details}
-% \begin{thebibliography}{1}
-% \nocite{*}
-	
+\section*{Contributions}
 
+\textbf{Core Contributors:} Yuhang Huang, Jiazhao Zhang, Xuan Lv, Junyan Xu, Zhiyuan Yu, Ruizhen Hu, Kai Xu
 
-\bibliographystyle{IEEEtran} %.bst模板
-\bibliography{references} %.bib文件名字
-% \appendices
-% \input{appendix/proof}
-% \bibitem{ref1}
-% {\it{Mathematics Into Type}}. American Mathematical Society. [Online]. Available: https://www.ams.org/arc/styleguide/mit-2.pdf
+\textbf{Contributors:} Wancheng Feng, Shilong Zou, Hewen Xiao, Ziqiao Zhou, Kaiyun Huang, Zhiyu Peng, Juzhan Xu, Yifei Huang, Douhui Wu, Yan Zhang, Kexu Cheng, Chunhe Song, Yunji Chen, Bin Wu, Haibin Yu
 
-% \bibitem{ref2}
-% T. W. Chaundy, P. R. Barrett and C. Batey, {\it{The Printing of Mathematics}}. London, U.K., Oxford Univ. Press, 1954.
+\textbf{Corresponding Author:} Kai Xu
 
-% \bibitem{ref3}
-% F. Mittelbach and M. Goossens, {\it{The \LaTeX Companion}}, 2nd ed. Boston, MA, USA: Pearson, 2004.
+\bibliographystyle{unsrtnat}
+\bibliography{references}
 
-% \bibitem{ref4}
-% G. Gr\"atzer, {\it{More Math Into LaTeX}}, New York, NY, USA: Springer, 2007.
-
-% \bibitem{ref5}M. Letourneau and J. W. Sharp, {\it{AMS-StyleGuide-online.pdf,}} American Mathematical Society, Providence, RI, USA, [Online]. Available: http://www.ams.org/arc/styleguide/index.html
-
-% \bibitem{ref6}
-% H. Sira-Ramirez, ``On the sliding mode control of nonlinear systems,'' \textit{Syst. Control Lett.}, vol. 19, pp. 303--312, 1992.
-
-% \bibitem{ref7}
-% A. Levant, ``Exact differentiation of signals with unbounded higher derivatives,''  in \textit{Proc. 45th IEEE Conf. Decis.
-% Control}, San Diego, CA, USA, 2006, pp. 5585--5590. DOI: 10.1109/CDC.2006.377165.
-
-% \bibitem{ref8}
-% M. Fliess, C. Join, and H. Sira-Ramirez, ``Non-linear estimation is easy,'' \textit{Int. J. Model., Ident. Control}, vol. 4, no. 1, pp. 12--27, 2008.
-
-% \bibitem{ref9}
-% R. Ortega, A. Astolfi, G. Bastin, and H. Rodriguez, ``Stabilization of food-chain systems using a port-controlled Hamiltonian description,'' in \textit{Proc. Amer. Control Conf.}, Chicago, IL, USA,
-% 2000, pp. 2245--2249.
-
-% \end{thebibliography}
-
-\begin{comment}
-\newpage
-
- 
-\vspace{11pt}
-
-% \bf{If you include a photo:}\vspace{-33pt}
-\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{figures/hyx.jpg}}]{Yuhang Huang}
-received the bachelor’s degree from the University of Shanghai for Science and Technology, Shanghai, China, in 2019, and the master’s degree from Shanghai University, Shanghai, China, in 2022. He is currently pursuing the Ph.D. degree at the National University of Defense Technology, Changsha, China.
-
-His research interests include computer vision, graphics, and generative models.
-\end{IEEEbiography}
-
-
-\vspace{11pt}
-\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{figures/zsl.jpg}}]{Shilong Zou} received the bachelor's degree from the University of Dalian Maritime University, Dalian, 2023. He is currently pursuing the master's degree at the National University of Defense Technology, Changsha, China. 
-
-His research interests include computer vision and generative models.
-\end{IEEEbiography}
-% \bf{If you will not include a photo:}\vspace{-33pt}
-% \begin{IEEEbiographynophoto}{John Doe}
-% Use $\backslash${\tt{begin\{IEEEbiographynophoto\}}} and the author name as the argument followed by the biography text.
-% \end{IEEEbiographynophoto}
-% \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{figures/qinzheng.jpg}}]{Zheng Qin} 
-% received the PhD degree in computer science and technology from National University of Defense Technology (NUDT), China. He is currently an assistant professor with the Defense Innovation Institute, Academy of Military Sciences, China. His current research interests include 3D computer vision, 3D feature learning, shape modeling, and scene understanding.
-% \end{IEEEbiography} 
-
-% \vspace{11pt}
-% \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{figures/xuesongxu.png}}]{Xuesong Xu} received his M.S and
-% Ph.D. degree in Control Science and
-% Engineering from Hunan University in
-% 2004 and 2009 respectively. From 2012 to
-% 2015, he works as a post-doctoral at
-% National University of defense and
-% technology. From 2016-2017, he also
-% works as a visiting researcher in Volen
-% National Center for Complex Systems,
-% Brandeis University, USA. Currently, He is a professor of
-% Hunan University of Technology and Business, working at
-% Base of International Science and Technology Innovation and
-% Cooperation on Big Data Technology and Management. His
-% research interests are in the areas of complex system
-% optimization, Blockchain and Machine learning. He has
-% published more than 30 papers at various conferences and
-% journals, including FGCS, Energy Reports, and Sensors. Prof.
-% Xu is a member of the IEEE Computational Intelligence.
-% \end{IEEEbiography}
-
-% \vspace{11pt}
-% \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{figures/zhuchengyang.png}}]{Chengyang Zhu} is an Associate Professor at the School of Computer, National University of Defense
-% Technology. The current directions of interest include data-driven shape analysis and modeling, 3D vision and, robot perception \& navigation, etc.
-% \end{IEEEbiography}
-
-\vspace{11pt}
-\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{figures/lxw.png}}]{Xinwang Liu}
-received his PhD degree from National University of Defense Technology (NUDT), China. He is now Professor of School of Computer, NUDT. His current research interests include kernel learning and unsupervised feature learning. Dr. Liu has published 60+ peer-reviewed papers, including
-those in highly regarded journals and conferences such as IEEE T-PAMI, IEEE T-KDE, IEEE T-IP, IEEE T-NNLS, IEEE T-MM, IEEE T-IFS, ICML, NeurIPS, ICCV, CVPR, AAAI, IJCAI, etc. He serves as the associated editor of Information Fusion Journal. More information can be found at \href{https://xinwangliu.github.io/}{https://xinwangliu.github.io/}.
-\end{IEEEbiography}
-
-% \begin{IEEEbiography}
-% [{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{figures/xiaohongchen.png}}]{Xiaohong Chen} 
-% is an Academician of the Chinese Academy of Engineering and is a Distinguished Expert of Management Science and Engineering, Engineering Management, and Data Intelligence. Additionally, she is the Convener of the Management Science and Engineering Discipline Assessment Group under the Degree Committee of the State Council, the Director of the National Basic Science Center, and the Director of the Xiangjiang Laboratory, Changsha, China. Her leadership roles extend to the Innovation Group of the National Natural Science Foundation, the Cheung Kong Scholars Innovation Team under the Ministry of Education, and as a Leading Talent of Philosophy and Social Sciences in the Ten Thousand Talents Plan of the Organization Department of the Central Committee of the People’s Republic of China. She has published over 400 papers in prestigious academic journals, with more than 60 papers featured in the top 1\% of ESI highly cited papers, and holds an H-Index of 87. Her research focuses on decision theory and decision support systems, data intelligence, and the advancement of a smart society.
-% \end{IEEEbiography}
-
-\vspace{11pt}
-\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{figures/kevinxu.jpg}}]{Kai Xu} (Senior Member, IEEE) received the Ph.D. degree in computer science from the National University of Defense Technology (NUDT), Changsha,
-China, in 2011. From 2008 to 2010, he worked as a Visiting Ph.D. degree with the GrUVi Laboratory, Simon Fraser University, Burnaby, BC, Canada. He is currently a Professor with the School of Computer Science, NUDT. He is also an Adjunct Professor with Simon Fraser University. His current research interests include data-driven shape analysis and modeling, and 3-D vision and robot perception and navigation.
-\end{IEEEbiography}
-
-
-
-
-\vfill
-\end{comment}
 \end{document}
-
-
