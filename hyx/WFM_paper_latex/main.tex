@@ -14,6 +14,8 @@
 \newcommand{\tabref}[1]{\cref{#1}}
 \newcommand{\eqnref}[1]{\cref{#1}}
 \newcommand{\secref}[1]{\cref{#1}}
+\newcommand{\cmark}{\checkmark}
+\newcommand{\xmark}{\texttimes}
 
 % === Paper-Specific Macros ===
 \newcommand{\methodname}{PAIWorld}
@@ -33,20 +35,20 @@
 \graphicspath{{figures/}}
 
 % === Title ===
-\title{PAIWorld: A 3D-Consistent Multi-View World Foundation Model for Robotic Manipulation}
+\title{PAIWorld: A 3D-Consistent World Foundation Model for Robotic Manipulation}
 
 % === Authors ===
-\author[1]{The PAI Lab}
+\author{The PAIWorld Team}
 
 % === Affiliations ===
-\affiliation[1]{Institute of AI for Industries, Chinese Academy of Sciences}
+\affiliation{Institute of AI for Industries, Chinese Academy of Sciences}
 
 % === Metadata ===
 \date{June 2026}
 
 % === Abstract ===
 \abstract{%
-World foundation models (WFMs) have emerged as powerful simulators of physical environments, yet they predominantly operate in a single-view setting and lack the multi-view 3D consistency that robotic manipulation demands. Robotic systems inherently rely on multiple cameras---egocentric, eye-to-hand, and wrist-mounted---to capture complementary viewpoints for policy learning. Current multi-view world models, however, simply concatenate view tokens without explicit geometric reasoning, yielding cross-view object drift, depth inconsistency, and texture misalignment that propagate errors into downstream planning and control. We trace these failures to two fundamental deficiencies: (1)~the absence of an explicit \emph{inter-view communication mechanism}, which forces each viewpoint to generate in isolation, and (2)~the absence of a \emph{3D geometric prior}, which leaves the model without guidance on what constitutes physically correct cross-view structure. We argue that resolving both is necessary and sufficient: an information pathway across views and a geometric signal that steers it must coexist, since communication without geometric guidance collapses to trivial shortcuts, while geometric priors without an inter-view channel cannot propagate constraints across viewpoints. Building on this analysis, we present \methodname{}, a framework that augments diffusion-transformer world models with three components: \textbf{Geometric Rotary Position Embedding} encodes camera ray directions and extrinsic poses into the attention mechanism via rotary position encoding; \textbf{Geometry-Aware Cross-View Attention} blocks provide explicit inter-view communication channels; and \textbf{Latent 3D-REPA} distills 3D-aware features from frozen 3D foundation models as the geometric learning signal. Built upon the Cosmos world foundation model, \methodname{} attains state-of-the-art multi-view 3D consistency on robotic manipulation benchmarks and enables downstream applications including model-based planning, world action models, and multi-view policy post-training.%
+World foundation models (WFMs) have emerged as powerful simulators of physical environments, yet they predominantly operate in a single-view setting and lack the multi-view 3D consistency that robotic manipulation demands. Robotic systems inherently rely on multiple cameras---egocentric, eye-to-hand, and wrist-mounted---to capture complementary viewpoints for policy learning. Current multi-view world models, however, simply concatenate view tokens without explicit geometric reasoning, yielding cross-view object drift, depth inconsistency, and texture misalignment that propagate errors into downstream planning and control. We trace these failures to two fundamental deficiencies: (1)~the absence of an explicit \emph{inter-view communication mechanism}, which forces each viewpoint to generate in isolation, and (2)~the absence of a \emph{3D geometric prior}, which leaves the model without guidance on what constitutes physically correct cross-view structure. We argue that resolving both is necessary and sufficient: an information pathway across views and a geometric signal that steers it must coexist, since communication without geometric guidance collapses to trivial shortcuts, while geometric priors without an inter-view pathway cannot propagate constraints across viewpoints. Building on this analysis, we present \textbf{\methodname{}}, a framework that augments diffusion-transformer world models along two technical pillars, realized by three components. To build the \emph{inter-view communication pathway}, \textbf{Geometry-Aware Cross-View Attention} blocks open an explicit pathway across views, while \textbf{Geometric Rotary Position Embedding} encodes camera ray directions and extrinsic poses into this attention via rotary position encoding. To supply the \emph{geometric learning signal}, \textbf{Latent 3D-REPA} distills 3D-aware features from frozen 3D foundation models, ensuring the exchanged content is 3D-consistent. Built upon the DiT-based world foundation model, \methodname{} attains state-of-the-art multi-view 3D consistency on robotic manipulation benchmarks---ranking 1st on the WorldArena leaderboard and 2nd on the AgiBot-Challenge2026 leaderboard---and enables downstream applications including model-based planning, world action models, and multi-view policy post-training.%
 }
 
 \begin{document}
@@ -59,13 +61,13 @@ World foundation models (WFMs) have emerged as powerful simulators of physical e
 \input{sections/experiment}
 \input{sections/conclusion}
 
-\section*{Contributions}
+% \section*{Contributions}
 
-\textbf{Core Contributors:} Yuhang Huang, Jiazhao Zhang, Xuan Lv, Junyan Xu, Zhiyuan Yu, Ruizhen Hu, Kai Xu
+% \textbf{Core Contributors:} Yuhang Huang, Jiazhao Zhang, Xuan Lv, Junyan Xu, Zhiyuan Yu, Ruizhen Hu, Kai Xu
 
-\textbf{Contributors:} Wancheng Feng, Shilong Zou, Hewen Xiao, Ziqiao Zhou, Kaiyun Huang, Zhiyu Peng, Juzhan Xu, Yifei Huang, Douhui Wu, Yan Zhang, Kexu Cheng, Chunhe Song, Yunji Chen, Bin Wu, Haibin Yu
+% \textbf{Contributors:} Wancheng Feng, Shilong Zou, Hewen Xiao, Ziqiao Zhou, Kaiyun Huang, Zhiyu Peng, Juzhan Xu, Hang Zhao, Chenyang Zhu, Renjiao Yi, Yifei Huang, Douhui Wu, Yan Zhang, Kexu Cheng, Chunhe Song, Yunzhi Xue, Xiuhong Zhang, Leitao Guo, Yunji Chen, Bin Wu, Haibin Yu
 
-\textbf{Corresponding Author:} Kai Xu
+% \textbf{Corresponding Author:} Kai Xu
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}

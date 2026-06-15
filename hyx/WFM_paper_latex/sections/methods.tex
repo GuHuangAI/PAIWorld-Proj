@@ -4,11 +4,11 @@
 \begin{figure*}[t]
 	\centering
 	\includegraphics[width=\textwidth]{pipeline.pdf}
-	\caption{Overview of the \methodname{} framework. Built upon a DiT-based flow matching backbone, \methodname{} introduces three components to achieve multi-view 3D consistency: (1)~Geometric Rotary Position Embedding (Geo-RoPE) encodes camera ray directions and extrinsic poses into the attention mechanism, (2)~Cross-View Attention blocks enable explicit inter-view communication, and (3)~Latent 3D-REPA aligns intermediate DiT representations with 3D-aware features from frozen foundation models (VGGT). The three components jointly satisfy the two necessary conditions for multi-view 3D consistency: inter-view communication and 3D geometric priors.}
+	\caption{Overview of the \methodname{} framework. Built on a DiT-based flow matching backbone, \methodname{} rests on two technical pillars realized by three components. \emph{Pillar 1---the inter-view pathway} (two components): (1)~Geometry-Aware Cross-View Attention blocks open an explicit communication pathway across views, and (2)~Geometric Rotary Position Embedding (Geo-RoPE) encodes camera ray directions and extrinsic poses into this attention, biasing it toward geometrically corresponding tokens. \emph{Pillar 2---the geometric objective} (one component): (3)~Latent 3D-REPA aligns intermediate DiT representations with 3D-aware features from a frozen 3D foundation model (Depth Anything 3), supplying the supervisory signal. The first two components build the pathway, while Latent 3D-REPA ensures the information flowing through it is 3D-consistent.}
 	\label{fig:pipeline}
 \end{figure*}
 
-We present \methodname{}, a framework for injecting 3D consistency into flow-matching world foundation models for multi-view robotic manipulation. As argued in \secref{sec:introduction}, multi-view 3D consistency rests on two conditions: inter-view communication and a 3D geometric prior. Our approach augments a DiT-based flow matching backbone with three components that satisfy both conditions jointly (\figref{fig:pipeline}): Geometric Rotary Position Embedding (\secref{sec:camera-pe}), Geometry-Aware Cross-View Attention (\secref{sec:cross-view-attn}), and Latent 3D-REPA (\secref{sec:3d-repa}). We first formalize the problem setting (\secref{sec:problem}), then describe each component and analyze why both conditions must hold simultaneously (\secref{sec:synergy}).
+We present \methodname{}, a framework for injecting 3D consistency into flow-matching world foundation models for multi-view robotic manipulation. As argued in \secref{sec:introduction}, multi-view 3D consistency rests on two technical pillars: an architectural pathway for inter-view communication and a training objective that enforces 3D-consistent content. \methodname{} builds these two pillars from three components on a DiT-based flow matching backbone (\figref{fig:pipeline}). The pathway is formed by two cooperating components---Geometry-Aware Cross-View Attention (\secref{sec:cross-view-attn}), which opens the inter-view pathway, and Geometric Rotary Position Embedding (\secref{sec:camera-pe}), which shapes this pathway with camera geometry. The objective is supplied by a single component, Latent 3D-REPA (\secref{sec:3d-repa}). We first formalize the problem setting (\secref{sec:problem}), then describe each component and analyze why both pillars must be present simultaneously (\secref{sec:synergy}).
 
 \subsection{Problem Formulation}
 \label{sec:problem}
@@ -18,16 +18,11 @@ Consider a robotic manipulation system equipped with $V$ cameras, each providing
 \label{eq:mv-gen}
 p_\theta\!\left(\{I_{t_0+1:T}^{v}\}_{v=1}^{V} \;\middle|\; \{I_{1:t_0}^{v}\}_{v=1}^{V},\, \{\mathbf{K}^v, \mathbf{R}^v, \mathbf{t}^v\}_{v=1}^{V},\, c\right),
 \end{equation}
-where $T$ is the prediction horizon. The generated multi-view video must satisfy a \emph{multi-view 3D consistency} constraint: for any 3D point $\mathbf{X} \in \R^3$ visible in views $v_i$ and $v_j$ at time $t$, its projected pixel locations $\mathbf{x}_t^{v_i}$ and $\mathbf{x}_t^{v_j}$ must satisfy the epipolar constraint:
-\begin{equation}
-\label{eq:epipolar}
-(\mathbf{x}_t^{v_j})^\top \mathbf{F}_{v_i \to v_j} \, \mathbf{x}_t^{v_i} = 0,
-\end{equation}
-where $\mathbf{F}_{v_i \to v_j}$ is the fundamental matrix derived from the relative camera pose between views $v_i$ and $v_j$. More broadly, the generated multi-view video should admit a coherent 3D reconstruction at every time step, i.e., there exists a consistent 3D scene $\mathcal{S}_t$ such that all views $\{I_t^v\}_{v=1}^V$ can be obtained by rendering $\mathcal{S}_t$ from their respective camera poses.
+where $T$ is the prediction horizon. Beyond per-view fidelity, the generated multi-view video must satisfy a \emph{multi-view 3D consistency} requirement: at every time step, the views should admit a coherent 3D explanation. Formally, there exists a consistent 3D scene $\mathcal{S}_t$ such that all views $\{I_t^v\}_{v=1}^V$ can be obtained by rendering $\mathcal{S}_t$ from their respective camera poses---equivalently, points corresponding to the same 3D location across views must respect the underlying epipolar geometry. This requirement is what existing single-view and flat-concatenation models fail to enforce, and it motivates the two pillars of our design.
 
 \subsection{Flow Matching DiT for Video Generation}
 
-We adopt a Diffusion Transformer (DiT)~\cite{peebles2023dit} trained with a flow matching objective~\cite{lipman2023flow,esser2024sd3} operating in the latent space of a pretrained video VAE. Given an input video, the VAE encoder produces a latent representation $\feat_0 \in \R^{T \times H \times W \times C}$. The model learns a velocity field $v_\theta(\feat_s, s)$ that transports samples from a noise distribution toward the data distribution along a linear interpolation path:
+We adopt a Diffusion Transformer (DiT)~\cite{peebles2023dit} trained with a flow matching objective~\cite{lipman2023flow,esser2024sd3} operating in the latent space of a pretrained video VAE. Following Wan2.1~\cite{wan2025wan}, we use its spatial-temporal VAE to compress each video both spatially and temporally into a compact latent representation, which substantially reduces the token count and makes multi-view video modeling tractable. Given an input video, the VAE encoder produces a latent representation $\feat_0 \in \R^{T \times H \times W \times C}$. The model learns a velocity field $u_\theta(\feat_s, s)$ that transports samples from a noise distribution toward the data distribution along a linear interpolation path:
 \begin{equation}
 \label{eq:flow-matching}
 \feat_s = (1 - s) \feat_0 + s \boldsymbol{\epsilon}, \quad \boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}),
@@ -35,7 +30,7 @@ We adopt a Diffusion Transformer (DiT)~\cite{peebles2023dit} trained with a flow
 where $s \in [0, 1]$ is the flow timestep. The training objective minimizes:
 \begin{equation}
 \label{eq:flow-loss}
-\lossdiff = \E_{s, \boldsymbol{\epsilon}}\left[\|v_\theta(\feat_s, s) - (\boldsymbol{\epsilon} - \feat_0)\|_2^2\right].
+\lossdiff = \E_{s, \boldsymbol{\epsilon}}\left[\|u_\theta(\feat_s, s) - (\boldsymbol{\epsilon} - \feat_0)\|_2^2\right].
 \end{equation}
 
 \paragraph{Conditioning Signal Injection.}
@@ -84,25 +79,26 @@ The same operation applies to keys. This design ensures that the ray subspace ca
 \subsection{Geometry-Aware Cross-View Attention}
 \label{sec:cross-view-attn}
 
-Standard temporal self-attention in each DiT block operates independently per view (after merging $V$ into the batch dimension), providing no explicit cross-view interaction. We introduce two complementary mechanisms for inter-view communication.
+Standard temporal self-attention in each DiT block operates independently per view (after merging $V$ into the batch dimension), providing no explicit cross-view interaction. To open the inter-view communication pathway, we introduce two complementary attention mechanisms: dedicated Cross-View Attention blocks and periodic spatial-concat self-attention.
 
 \paragraph{Multi-View Self-Attention Blocks.}
-At selected layers (the first 3 and last 3 blocks of the DiT), we insert a dedicated \emph{Cross-View Attention} sub-block. For each temporal frame $t$ (distinct from the flow timestep $s$), let $\{\mathbf{Z}_t^v\}_{v=1}^{V}$ denote the feature maps from all views, where $\mathbf{Z}_t^v \in \R^{(H \cdot W) \times D}$. The Cross-View Attention explicitly incorporates Geo-RoPE into the query and key projections:
+At selected DiT layers, we insert a dedicated \emph{Cross-View Attention} sub-block. For each temporal frame $t$ (distinct from the flow timestep $s$), let $\{\mathbf{Z}_t^v\}_{v=1}^{V}$ denote the feature maps from all views, where $\mathbf{Z}_t^v \in \R^{(H \cdot W) \times D}$. Each view's queries and keys are first projected and then rotated by Geo-RoPE \emph{using that view's own camera geometry}, so that the rotation applied to view $v$ depends on the rays and pose of camera $v$:
 \begin{equation}
 \label{eq:cross-view-attn}
 \begin{aligned}
-\tilde{\mathbf{Q}}_t^v &= \text{GeoRoPE}(\mathbf{W}_Q \mathbf{Z}_t^v) \\
-\tilde{\mathbf{K}}_t &= \text{GeoRoPE}(\mathbf{W}_K [\mathbf{Z}_t^1; \ldots; \mathbf{Z}_t^V]) \\
-\hat{\mathbf{Z}}_t^v &= \mathbf{Z}_t^v + \text{gate} \cdot \text{softmax}\!\left(\frac{\tilde{\mathbf{Q}}_t^v {\tilde{\mathbf{K}}_t}^\top}{\sqrt{d}}\right) \mathbf{W}_V [\mathbf{Z}_t^1; \ldots; \mathbf{Z}_t^V],
+\tilde{\mathbf{Q}}_t^v &= \mathrm{GeoRoPE}_v\!\left(\mathbf{W}_Q \mathbf{Z}_t^v\right), \qquad
+\tilde{\mathbf{K}}_t^v = \mathrm{GeoRoPE}_v\!\left(\mathbf{W}_K \mathbf{Z}_t^v\right), \qquad
+\mathbf{V}_t^v = \mathbf{W}_V \mathbf{Z}_t^v, \\
+\hat{\mathbf{Z}}_t^v &= \mathbf{Z}_t^v + \text{gate} \cdot \mathrm{softmax}\!\left(\frac{\tilde{\mathbf{Q}}_t^v \, [\tilde{\mathbf{K}}_t^1; \ldots; \tilde{\mathbf{K}}_t^V]^\top}{\sqrt{d}}\right) [\mathbf{V}_t^1; \ldots; \mathbf{V}_t^V],
 \end{aligned}
 \end{equation}
-where GeoRoPE applies the split ray-pose rotary encoding from \eqnref{eq:geo-rope} to the projected queries and keys. This ensures that geometrically corresponding tokens across views---those observing the same 3D point---naturally receive higher attention weights due to their aligned rotary positions. The gate is initialized to zero via AdaLN-Zero, preserving the pretrained single-view model at initialization.
+where $\mathrm{GeoRoPE}_v$ denotes the split ray-pose rotary encoding of \eqnref{eq:geo-rope} instantiated with the intrinsics $\mathbf{K}^v$ and extrinsics $[\mathbf{R}^v \mid \mathbf{t}^v]$ of view $v$, and $[\,\cdot\,;\,\cdot\,]$ concatenates the per-view keys (values) along the token dimension. Because each view is rotated by its own geometry, the query of view $v$ and the key of view $v'$ attain a high inner product precisely when their tokens observe the same 3D point, so geometrically corresponding tokens across views naturally receive higher attention weights. The gate is initialized to zero via AdaLN-Zero, preserving the pretrained single-view model at initialization.
 
 \paragraph{Spatial-Concat Self-Attention.}
-Every 4th block, instead of per-view temporal attention, we concatenate the view and spatial dimensions ($V \times H$) and perform joint spatio-view self-attention over all tokens simultaneously. This provides a broader receptive field where each token can attend to all spatial positions across all views within the same temporal context, complementing the dedicated cross-view blocks.
+Periodically, in place of per-view temporal attention, we flatten the view and spatial dimensions into a single token axis of length $V \cdot H \cdot W$ and perform joint spatio-view self-attention over all these tokens simultaneously. This provides a broader receptive field in which each token can attend to all spatial positions across all views within the same temporal context, complementing the dedicated cross-view blocks.
 
-\paragraph{Why Communication Alone Is Insufficient.}
-Cross-View Attention provides the information pathway for viewpoints to exchange geometric and semantic information, without which each view evolves independently with no mechanism to enforce cross-view coherence. Communication alone, however, does not guarantee 3D consistency: lacking an explicit geometric objective, the attention can converge to trivial shortcuts such as copying textures across views. This motivates the geometric learning signal introduced next.
+\paragraph{Why the Pathway Alone Is Insufficient.}
+Cross-View Attention and Geo-RoPE together establish the architectural pathway along which viewpoints exchange information, biased toward geometrically corresponding tokens. Yet an architectural bias only shapes \emph{how} information flows; it does not dictate \emph{what content} is 3D-consistent. Without an explicit geometric objective, the pathway can still settle into trivial shortcuts---copying textures across views or averaging features---that minimize the generation loss while violating true 3D structure. This motivates the geometric learning signal introduced next.
 
 \subsection{Latent 3D-REPA (3D Geometric Prior)}
 \label{sec:3d-repa}
@@ -110,37 +106,43 @@ Cross-View Attention provides the information pathway for viewpoints to exchange
 To provide the geometric learning signal for cross-view interaction, we introduce Latent 3D-REPA, a token-relation distillation objective that aligns the DiT's intermediate representations with features from frozen 3D foundation models.
 
 \paragraph{3D-Aware Feature Extraction.}
-We employ VGGT~\cite{wang2025vggt} as our 3D-aware feature extractor. For each multi-view frame set $\{I_t^v\}_{v=1}^V$, VGGT produces dense 1536-dimensional features that encode rich geometric priors including depth, 3D point maps, and camera-relative spatial structure. In addition, VGGT provides predicted camera extrinsics and intrinsics that are used by Geo-RoPE and for 3D point map reconstruction.
+We employ Depth Anything 3~\cite{lin2025depthanything3} as our 3D-aware feature extractor. For each multi-view frame set $\{I_t^v\}_{v=1}^V$, Depth Anything 3 produces dense features that encode rich geometric priors including depth, 3D point maps, and camera-relative spatial structure. In addition, it recovers camera extrinsics and intrinsics that are used by Geo-RoPE and for 3D point map reconstruction.
 
 \paragraph{Token Relation Distillation.}
-Rather than directly regressing 3D features token-by-token, we distill the \emph{relational structure} between tokens. At a selected intermediate layer $\ell$ of the DiT (layer 18 in our implementation), we extract the feature map $\mathbf{H}_\ell \in \R^{(T \cdot V \cdot H \cdot W) \times D}$ and project it to the VGGT feature dimension via a lightweight 3D convolutional projector $g_\phi$. The distillation loss operates on pairwise token similarities:
+Rather than directly regressing 3D features token-by-token, we distill the \emph{relational structure} between tokens. At a selected intermediate layer $\ell$ of the DiT, we extract the feature map $\mathbf{H}_\ell$ and project it to the VGGT feature dimension via a lightweight 3D convolutional projector $g_\phi$, yielding per-token features $\mathbf{F}^{\text{DiT}} = g_\phi(\mathbf{H}_\ell)$; the corresponding frozen features from Depth Anything 3 are denoted $\mathbf{F}^{\text{DA3}}$. We supervise the \emph{pairwise relations} among these tokens rather than their absolute values, since relational structure is invariant to the feature-space discrepancy between the two encoders.
+
+Computing the full token-token similarity matrix is prohibitively expensive ($N{=}V\!\cdot\!H\!\cdot\!W$ tokens per frame, over $T$ frames). We therefore estimate the relations through \emph{anchor sampling}: a random subset of $K$ tokens is drawn as anchors, and we measure the cosine similarity between every token and each anchor. For a token set $\mathbf{F} = \{\mathbf{f}_i\}_{i=1}^{M}$ with sampled anchor indices $\mathcal{A} \subset \{1,\dots,M\}$, $|\mathcal{A}| = K$, we define the sampled similarity matrix $\mathbf{S}(\mathbf{F}) \in \R^{M \times K}$ as
+\begin{equation}
+\label{eq:sampled-sim}
+\mathbf{S}(\mathbf{F})_{i,a} = \frac{\mathbf{f}_i^\top \mathbf{f}_{a}}{\|\mathbf{f}_i\| \, \|\mathbf{f}_{a}\|}, \quad a \in \mathcal{A}.
+\end{equation}
+The distillation loss aligns this relational structure at two granularities, applying the operator $\mathbf{S}(\cdot)$ of \eqnref{eq:sampled-sim} to two different token sets:
 \begin{equation}
 \label{eq:3d-repa}
-\lossrepa = \alpha \cdot \mathcal{L}_{\text{spatial}} + \beta \cdot \mathcal{L}_{\text{temporal}},
+\lossrepa = \mathcal{L}_{\text{spatial}} + \mathcal{L}_{\text{temporal}}.
 \end{equation}
-where the spatial loss enforces intra-frame token relations:
+The \emph{spatial} term operates within each frame: let $\mathbf{F}_{\text{frame}}$ denote the $N$ tokens of a single frame (across all views and spatial positions), from which $K_s$ anchors are sampled. Writing $\mathbf{S}_{\text{intra}} := \mathbf{S}(\mathbf{F}_{\text{frame}}) \in \R^{N \times K_s}$, the term aligns the DiT and Depth Anything 3 relations:
 \begin{equation}
-\mathcal{L}_{\text{spatial}} = \text{SmoothL1}\!\left(\mathbf{S}^{\text{DiT}}_{\text{intra}},\; \mathbf{S}^{\text{VGGT}}_{\text{intra}}\right),
+\mathcal{L}_{\text{spatial}} = \text{SmoothL1}\!\left(\mathbf{S}_{\text{intra}}^{\text{DiT}},\; \mathbf{S}_{\text{intra}}^{\text{DA3}}\right).
 \end{equation}
-and the temporal loss enforces inter-frame token relations:
+The \emph{temporal} term operates over the entire clip: let $\mathbf{F}_{\text{clip}}$ denote the full set of $T\!\cdot\!N$ tokens, from which $K_t$ anchors are sampled across all frames. Writing $\mathbf{S}_{\text{inter}} := \mathbf{S}(\mathbf{F}_{\text{clip}}) \in \R^{(T \cdot N) \times K_t}$,
 \begin{equation}
-\mathcal{L}_{\text{temporal}} = \text{SmoothL1}\!\left(\mathbf{S}^{\text{DiT}}_{\text{inter}},\; \mathbf{S}^{\text{VGGT}}_{\text{inter}}\right).
+\mathcal{L}_{\text{temporal}} = \text{SmoothL1}\!\left(\mathbf{S}_{\text{inter}}^{\text{DiT}},\; \mathbf{S}_{\text{inter}}^{\text{DA3}}\right).
 \end{equation}
-Here $\mathbf{S}_{\text{intra}}$ is a sampled pairwise cosine similarity matrix within each frame (across all views and spatial positions), and $\mathbf{S}_{\text{inter}}$ is a sampled cross-frame similarity matrix. Stochastic sampling of anchor tokens reduces computational cost while maintaining effective gradient signal.
+Both $\mathbf{S}_{\text{intra}}$ and $\mathbf{S}_{\text{inter}}$ are instances of the same sampled-similarity operator $\mathbf{S}(\cdot)$, differing only in their token set and anchor count: $\mathbf{S}_{\text{intra}}$ captures intra-frame geometric relations (within a single time step, across views and space), while $\mathbf{S}_{\text{inter}}$ captures cross-frame relations that span the temporal dimension. Stochastic anchor sampling reduces the cost from quadratic to $O(MK)$ while retaining an effective gradient signal.
 
 \paragraph{Why Geometric Priors Alone Are Insufficient.}
-Latent 3D-REPA encourages the DiT's token relations to mirror those of a geometry-aware encoder, providing an explicit signal of correct 3D structure. Yet this per-frame prior cannot enforce \emph{cross-view} consistency on its own: each view improves its 3D awareness in isolation, but without an inter-view channel the views cannot coordinate to produce geometrically compatible outputs.
+Latent 3D-REPA encourages the DiT's token relations to mirror those of a geometry-aware encoder, providing an explicit signal of correct 3D structure. Yet this per-frame prior cannot enforce \emph{cross-view} consistency on its own: each view improves its 3D awareness in isolation, but without an inter-view pathway the views cannot coordinate to produce geometrically compatible outputs.
 
 \subsection{Joint Mechanism}
 \label{sec:synergy}
 
-Neither mechanism suffices in isolation, as motivated above. Their value emerges from coupling: when both are present, they form a reinforcing loop:
+Neither pillar suffices in isolation, as motivated above; their value emerges from coupling. When both are present, they form a reinforcing loop:
 \begin{enumerate}
-    \item Cross-View Attention provides the communication channel through which views share information.
-    \item Latent 3D-REPA ensures that the shared information is geometrically meaningful, because the token relations are aligned with a 3D-aware prior that spans all views.
-    \item Geometric Rotary Position Embedding provides the common geometric reference frame, enabling the attention to route information along epipolar correspondences and the REPA loss to operate in a consistent 3D coordinate system across all views.
+    \item \emph{The pathway (architecture).} Geometry-Aware Cross-View Attention opens the pathway through which views exchange information, and Geo-RoPE biases this pathway to route information along geometrically corresponding tokens---while also placing all views in a shared 3D coordinate frame.
+    \item \emph{The objective (supervision).} Latent 3D-REPA ensures the exchanged content is geometrically meaningful, aligning the DiT's token relations with a 3D-aware prior that spans all views; because Geo-RoPE has fixed a common reference frame, these supervised constraints propagate coherently across views rather than collapsing into per-view shortcuts.
 \end{enumerate}
-The communication channel carries geometrically meaningful content, and the geometric prior is enforced coherently across all views, producing a non-additive improvement in 3D consistency.
+The pathway carries information and the objective makes it 3D-consistent; because each addresses a deficiency the other cannot, their combination yields a non-additive improvement in 3D consistency.
 
 \subsection{Training Objective}
 \label{sec:training}
@@ -152,4 +154,4 @@ The total training objective combines the flow matching loss with the Latent 3D-
 \end{equation}
 where $\lossdiff$ is the flow matching velocity prediction loss from \eqnref{eq:flow-loss} and $\lambda = 0.5$ balances generation quality with 3D alignment.
 
-The VGGT encoder is kept frozen throughout training, serving as a fixed 3D prior. Cross-View Attention blocks are initialized with AdaLN-Zero gating (gate$=0$ at initialization) so that the pretrained backbone weights are exactly preserved at step zero, and the new modules gradually contribute as training progresses. The additional parameters introduced by \methodname{}, including the Geo-RoPE frequency buffers, Cross-View Attention blocks with their dedicated FFN layers, and the REPA projection heads, amount to less than 8\% of the base model parameters.
+The Depth Anything 3 encoder is kept frozen throughout training, serving as a fixed 3D prior. Cross-View Attention blocks are initialized with AdaLN-Zero gating (gate$=0$ at initialization) so that the pretrained backbone weights are exactly preserved at step zero, and the new modules gradually contribute as training progresses.

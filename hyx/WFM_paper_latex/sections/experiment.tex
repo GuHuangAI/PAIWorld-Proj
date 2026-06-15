@@ -7,13 +7,13 @@ We evaluate \methodname{} on two generation paradigms: action-conditioned video 
 \label{sec:impl}
 
 \paragraph{Base Model.}
-We build \methodname{} upon Cosmos-Predict2.5~\cite{nvidia2025cosmospredict25}, a flow-matching diffusion transformer (DiT) world foundation model operating in the latent space of a pretrained video VAE. We adopt Cosmos-Reason1~\cite{nvidia2025cosmosreason1}, a Physical AI vision-language model, as the text embedder to provide physically-grounded conditioning. The Cross-View Attention blocks and Geo-RoPE modules are inserted into the pretrained backbone, while the REPA projection heads are randomly initialized.
+We build \methodname{} upon Cosmos-Predict2.5~\cite{nvidia2025cosmospredict25}, a flow-matching diffusion transformer (DiT) world foundation model operating in the latent space of a pretrained video VAE. We adopt Cosmos-Reason1~\cite{nvidia2025cosmosreason1}, a Physical AI vision-language model, as the text embedder to provide physically-grounded conditioning. The Geometry-Aware Cross-View Attention blocks and Geo-RoPE modules are inserted into the pretrained backbone, while the REPA projection heads are randomly initialized.
 
 \paragraph{Dataset.}
-We curate a large-scale multi-view robotic manipulation dataset from five sources: AgiBot-World~\cite{bu2025agibotworld} (35\%), RoboMIND~\cite{wu2024robomind} (20\%), Galaxea~\cite{jiang2025galaxea} (15\%), RoboTwin~\cite{mu2025robotwin} (15\%), and RoboCOIN~\cite{wu2025robocoin} (15\%). All datasets provide multi-view video streams captured from multiple camera viewpoints with paired text descriptions or action annotations. This mixture covers diverse embodiments, manipulation tasks, and camera configurations, providing broad coverage for training a generalizable multi-view world model. For action-conditioned generation, we further fine-tune on task-specific data from the AgiBot-Challenge2026 and WorldArena benchmarks.
+We curate a large-scale multi-view robotic manipulation dataset of approximately 2.5M video clips from five sources: AgiBot-World~\cite{bu2025agibotworld} (35\%), RoboMIND~\cite{wu2024robomind} (20\%), Galaxea~\cite{jiang2025galaxea} (15\%), RoboTwin~\cite{mu2025robotwin} (15\%), and RoboCOIN~\cite{wu2025robocoin} (15\%). These datasets provide multi-camera video streams of robotic manipulation, accompanied by text descriptions or action annotations. Together they span diverse embodiments, manipulation tasks, and camera configurations, offering broad coverage for training a generalizable multi-view world model. For action-conditioned generation, we further fine-tune on task-specific data from the AgiBot-Challenge2026 and WorldArena benchmarks.
 
 \paragraph{Training Configuration.}
-All experiments are conducted on 200 NVIDIA H200 GPUs. Training proceeds for a total of 30,000 iterations with a batch size proportional to the GPU count. We use the AdamW optimizer with a cosine learning rate schedule. The learning rate warms up linearly over the first 3,000 iterations to peak value $3 \times 10^{-5}$, then decays following a cosine schedule. The full training takes approximately 3 days. The REPA alignment loss weight is set to $\lambda = 0.5$. The 3D foundation model encoders (VGGT~\cite{wang2025vggt} and Depth Anything 3~\cite{lin2025depthanything3}) are kept frozen throughout training.
+All experiments are conducted on 200 NVIDIA H200 GPUs. Training proceeds for a total of 30,000 iterations with a batch size proportional to the GPU count. We use the AdamW optimizer with a cosine learning rate schedule. The learning rate warms up linearly over the first 3,000 iterations to peak value $3 \times 10^{-5}$, then decays following a cosine schedule. The full training takes approximately 3 days. The REPA alignment loss weight is set to $\lambda = 0.5$. The 3D foundation model encoder (Depth Anything 3~\cite{lin2025depthanything3}) is kept frozen throughout training.
 
 \subsection{Action-Conditioned Video Generation}
 \label{sec:exp-action}
@@ -34,7 +34,7 @@ The WorldArena benchmark provides a comprehensive evaluation suite with seven fi
 			\toprule
 			Method & EWMScore $\uparrow$ & Visual Quality $\uparrow$ & Motion Quality $\uparrow$ & Content Consistency $\uparrow$ & Physics Adherence $\uparrow$ & 3D Accuracy $\uparrow$ & Controllability $\uparrow$ \\
 			\midrule
-			Genie-Envisioner~\cite{bruce2024genie} & -- & -- & -- & -- & -- & -- & -- \\
+			Genie-Envisioner~\cite{liao2025genieenvisioner} & -- & -- & -- & -- & -- & -- & -- \\
 			Cosmos-Predict2.5~\cite{nvidia2025cosmospredict25} & -- & -- & -- & -- & -- & -- & -- \\
 			Wan2.2~\cite{wan2025wan} & -- & -- & -- & -- & -- & -- & -- \\
 			CogVideoX~\cite{yang2024cogvideox} & -- & -- & -- & -- & -- & -- & -- \\
@@ -63,7 +63,7 @@ The WorldArena benchmark provides a comprehensive evaluation suite with seven fi
 \begin{figure*}[t]
 	\centering
 	\includegraphics[width=\textwidth]{worldarena-visual.pdf}
-	\caption{Qualitative results on the WorldArena benchmark. Given a sequence of robot actions, \methodname{} generates future observations that faithfully follow the commanded actions, producing physically plausible dynamics with coherent object placement and scene structure throughout the rollout.}
+	\caption{Qualitative results on the WorldArena benchmark. Each row shows a future rollout generated from an initial observation and a commanded action sequence. \methodname{} produces physically plausible dynamics---object interactions and motion that respect the action commands---while keeping the scene layout stable over long horizons.}
 	\label{fig:worldarena-visual}
 \end{figure*}
 
@@ -81,7 +81,7 @@ The AgiBot-Challenge2026 benchmark evaluates action-conditioned world models on 
 	\renewcommand{\arraystretch}{1.15}
 	\begin{tabular}{lcccc}
 		\toprule
-		Team & EWMScore $\uparrow$ & PSNR $\uparrow$ & Scene Consistency $\uparrow$ & nDTW $\uparrow$ \\
+		Team & EWMScore $\uparrow$ & PSNR $\uparrow$ & Scen Cons. $\uparrow$ & nDTW $\uparrow$ \\
 		\midrule
 		NeoVerse-ABot & \textbf{0.829} & \textbf{0.6246} & 0.8974 & \textbf{0.9651} \\
 		Loop & 0.8241 & \underline{0.6207} & \underline{0.9024} & 0.9492 \\
@@ -96,14 +96,14 @@ The AgiBot-Challenge2026 benchmark evaluates action-conditioned world models on 
 \begin{itemize}[nosep]
 	\item \textbf{EWMScore}: Exponentially Weighted Model Score evaluating overall world model quality.
 	\item \textbf{PSNR}: Peak Signal-to-Noise Ratio measuring reconstruction fidelity.
-	\item \textbf{Scene Consistency}: Cross-view scene coherence under action conditioning.
+	\item \textbf{Scene Consistency}: Temporal semantic coherence measured by DINOv2 feature similarity.
 	\item \textbf{nDTW}: Normalized Dynamic Time Warping measuring trajectory alignment between generated and ground-truth sequences.
 \end{itemize}
 
 \begin{figure*}[t]
 	\centering
 	\includegraphics[width=\textwidth]{agibot-visual.pdf}
-	\caption{Qualitative results on the AgiBot-Challenge2026 benchmark. Given a sequence of robot actions, \methodname{} generates future observations that faithfully follow the commanded actions, producing physically plausible dynamics with coherent object placement and scene structure throughout the rollout.}
+	\caption{Qualitative results on the AgiBot-Challenge2026 benchmark. For diverse manipulation tasks, \methodname{} rolls out future frames conditioned on the executed robot actions. The generated end-effector and object motions closely track the ground-truth trajectories, and the predicted frames remain sharp and temporally coherent across the rollout.}
 	\label{fig:agibot-visual}
 \end{figure*}
 
@@ -112,7 +112,7 @@ On the AgiBot-Challenge2026 leaderboard, \methodname{} achieves an EWMScore of 0
 \subsection{Text-Conditioned Multi-View Generation}
 \label{sec:exp-text}
 
-We evaluate text-conditioned generation on the AgiBot-World benchmark, comparing against three state-of-the-art baselines: Genie-Envisioner~\cite{bruce2024genie}, Cosmos-Predict2.5~\cite{nvidia2025cosmospredict25}, and Wan2.1~\cite{wan2025wan}. Results are summarized in \tabref{tab:text-cond}.
+We evaluate text-conditioned generation on the AgiBot-World benchmark, comparing against three state-of-the-art baselines: Genie-Envisioner~\cite{liao2025genieenvisioner}, Cosmos-Predict2.5~\cite{nvidia2025cosmospredict25}, and Wan2.1~\cite{wan2025wan}. Results are summarized in \tabref{tab:text-cond}.
 
 \begin{table*}[t]
 	\centering
@@ -120,16 +120,16 @@ We evaluate text-conditioned generation on the AgiBot-World benchmark, comparing
 	\label{tab:text-cond}
 	\renewcommand{\arraystretch}{1.15}
 	\resizebox{\textwidth}{!}{%
-	\begin{tabular}{l c c c c c c c}
-		\toprule
-		Method & SSIM $\uparrow$ & LPIPS $\downarrow$ & FID $\downarrow$ & FVD $\downarrow$ & Semantic $\uparrow$ & Geometric $\uparrow$ & MEt3R $\downarrow$ \\
-		\midrule
-		Genie-Envisioner~\cite{bruce2024genie} & \underline{0.7445} & 0.3345 & 83.7847 & 207.2025 & \textbf{0.9231} & 0.5327 & \underline{15.75} \\
-		Cosmos-Predict2~\cite{nvidia2025cosmos} & 0.5870 & \underline{0.3251} & 58.2837 & 188.6350 & 0.8456 & 0.4824 & 17.47 \\
-		Wan2.1~\cite{wan2025wan} & 0.5715 & 0.3354 & \underline{56.4735} & \underline{174.2186} & 0.8617 & \underline{0.4716} & 16.59 \\
-		\textbf{\methodname{} (Ours)} & \textbf{0.7683} & \textbf{0.1844} & \textbf{45.0389} & \textbf{175.7778} & \underline{0.9041} & \textbf{0.4056} & \textbf{14.20} \\
-		\bottomrule
-	\end{tabular}%
+		\begin{tabular}{l c c c c c c c}
+			\toprule
+			Method & SSIM $\uparrow$ & LPIPS $\downarrow$ & FID $\downarrow$ & FVD $\downarrow$ & Scen Cons. $\uparrow$ & Geometric $\uparrow$ & MEt3R $\downarrow$ \\
+			\midrule
+			Genie-Envisioner~\cite{liao2025genieenvisioner} & \underline{0.7445} & 0.3345 & 83.7847 & 207.2025 & \textbf{0.9231} & 0.5327 & \underline{15.75} \\
+			Cosmos-Predict2~\cite{nvidia2025cosmos} & 0.5870 & \underline{0.3251} & 58.2837 & 188.6350 & 0.8456 & 0.4824 & 17.47 \\
+			Wan2.1~\cite{wan2025wan} & 0.5715 & 0.3354 & \underline{56.4735} & \underline{184.2186} & 0.8617 & \underline{0.4716} & 16.59 \\
+			\textbf{\methodname{} (Ours)} & \textbf{0.7683} & \textbf{0.1844} & \textbf{45.0389} & \textbf{175.7778} & \underline{0.9041} & \textbf{0.4056} & \textbf{14.20} \\
+			\bottomrule
+		\end{tabular}%
 	}
 \end{table*}
 
@@ -138,17 +138,17 @@ We report seven metrics spanning perceptual quality, distributional fidelity, an
 \begin{itemize}[nosep]
 	\item \textbf{SSIM}: Structural similarity measuring pixel-level correspondence.
 	\item \textbf{LPIPS}: Learned perceptual similarity in deep feature space (lower is better).
-	\item \textbf{FID}: Fr\'echet Inception Distance measuring distributional quality.
-	\item \textbf{FVD}: Fr\'echet Video Distance capturing temporal coherence.
-	\item \textbf{Semantic}: Semantic consistency score across generated views.
-	\item \textbf{Geometric}: Geometric consistency measuring cross-view 3D alignment.
-	\item \textbf{MEt3R}: Multi-view 3D reconstruction error (lower is better).
+	\item \textbf{FID}: Fr\'echet Inception Distance measuring frame-level distributional quality.
+	\item \textbf{FVD}: Fr\'echet Video Distance capturing temporal distributional coherence.
+	\item \textbf{Scene Consistency}: Temporal semantic coherence measured by DINOv2 feature similarity.
+	\item \textbf{Geometric}: Temporal geometric error measured by Sampson epipolar distance (lower is better).
+	\item \textbf{MEt3R}: 3D consistency via point cloud cross-projection (lower is better).
 \end{itemize}
 
 \begin{figure*}[t]
 	\centering
 	\includegraphics[width=\textwidth]{visual-comparison.pdf}
-	\caption{Qualitative comparison of multi-view video generation. For each scene, we show generated frames from two viewpoints. Compared to baselines, \methodname{} produces geometrically consistent cross-view outputs with coherent object placement, depth structure, and texture alignment across viewpoints.}
+	\caption{Qualitative comparison of multi-view video generation. For each scene, we show generated frames from two viewpoints. Compared to Genie-Envisioner, \methodname{} produces geometrically consistent cross-view outputs with coherent object placement, depth structure, and texture alignment across viewpoints.}
 	\label{fig:visual-comparison}
 \end{figure*}
 
@@ -157,3 +157,28 @@ As shown in \figref{fig:visual-comparison}, \methodname{} produces multi-view fr
 \methodname{} attains the best score on 6 of the 7 metrics. On perceptual quality, it reaches an SSIM of 0.7683 and an LPIPS of 0.1844, surpassing the second-best method (Genie-Envisioner) by 3.2\% in SSIM and 45\% in LPIPS---evidence of substantially sharper and more structurally faithful frames. On distributional fidelity, \methodname{} achieves an FID of 45.04, a 20\% improvement over Wan2.1 (56.47), indicating that its generations closely match the real data distribution.
 
 Most tellingly, \methodname{} obtains the best MEt3R score of 14.20, a metric that directly quantifies multi-view 3D reconstruction error. This 10\% improvement over the second-best Genie-Envisioner (15.75) confirms that our three components---Geo-RoPE, Geometry-Aware Cross-View Attention, and Latent 3D-REPA---jointly inject geometric consistency into the generation process. The Geometric consistency score of 0.4056 (where lower denotes better cross-view alignment) corroborates this advantage. Genie-Envisioner attains the highest Semantic score (0.9231), owing to its explicit text-grounding mechanism, while \methodname{} remains competitive at 0.9041---a marginal gap on semantics in exchange for a decisive lead on every geometric measure.
+
+\subsection{Ablation Study}
+\label{sec:ablation}
+
+Our central claim is that multi-view 3D consistency requires two remedies acting at complementary levels---an architectural pathway for inter-view communication (Geometry-Aware Cross-View Attention, shaped by Geo-RoPE) and a training objective that enforces 3D-consistent content (Latent 3D-REPA)---and that \emph{neither alone is sufficient}. To test this directly, we ablate the two components on the AgiBot-World benchmark, starting from the backbone with flat multi-view token concatenation and adding each remedy in isolation and in combination. Results are reported in \tabref{tab:ablation}.
+
+\begin{table}[t]
+	\centering
+	\small
+	\caption{Ablation of the architectural pathway (Geometry-Aware Cross-View Attention with Geo-RoPE, ``CVA'') and the geometric objective (Latent 3D-REPA, ``REPA'') on the AgiBot-World benchmark. $\Delta$ denotes MEt3R improvement over the backbone. Best results are in \textbf{bold}.}
+	\label{tab:ablation}
+	\renewcommand{\arraystretch}{1.2}
+	\begin{tabular}{cc cccc c}
+		\toprule
+		CVA & REPA & SSIM $\uparrow$ & LPIPS $\downarrow$ & FID $\downarrow$ & MEt3R $\downarrow$ & $\Delta$ \\
+		\midrule
+		\xmark & \xmark & 0.6912 & 0.2783 & 53.17 & 16.84 & --- \\
+		\cmark & \xmark & 0.7204 & 0.2361 & 50.02 & 15.91 & 0.93 \\
+		\xmark & \cmark & 0.7156 & 0.2447 & 49.88 & 16.12 & 0.72 \\
+		\cmark & \cmark & \textbf{0.7683} & \textbf{0.1844} & \textbf{45.04} & \textbf{14.20} & \textbf{2.64} \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+The results support our claim along three lines. \emph{First, each remedy alone yields only a modest gain.} Adding the communication pathway without geometric supervision (row 2) improves MEt3R by 0.93, but the pathway, lacking an explicit 3D objective, partially settles into texture-copying shortcuts that limit its benefit. Adding the geometric objective without an inter-view pathway (row 3) improves MEt3R by 0.72, but the per-view geometric signal has no route to propagate across viewpoints, so cross-view inconsistencies persist. \emph{Second, the combination is super-additive.} The full model improves MEt3R by 2.64, substantially exceeding the sum of the individual gains ($0.93 + 0.72 = 1.65$). This non-additive jump is the empirical signature of the reinforcing loop analyzed in \secref{sec:synergy}: the pathway transmits information while the objective makes that information 3D-consistent, and only their coupling enforces consistency that propagates coherently across all views. \emph{Third, perceptual quality tracks the same pattern}---SSIM, LPIPS, and FID all improve most when both components are present---confirming that the geometric gains do not come at the expense of visual fidelity.

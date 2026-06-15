@@ -56,7 +56,7 @@
           </h2>
 
           <div class="publication-authors hero-authors">
-            <span>The PAI Lab</span>
+            <span>The PAIWorld Team</span>
           </div>
 
           <div class="hero-affiliations" aria-label="Affiliations">
@@ -105,12 +105,18 @@
           <h2>Abstract</h2>
         </div>
         <p class="abstract-text">
-          World foundation models are powerful simulators for physical environments, but most existing systems operate in
-          a single-view setting. Robotic manipulation requires multiple cameras, such as egocentric, eye-to-hand, and
-          wrist-mounted views, whose generated futures must remain geometrically compatible. PAIWorld identifies two
-          missing ingredients in current multi-view world models: an explicit inter-view communication mechanism and a 3D
-          geometric prior. Built on a Cosmos-style diffusion transformer, PAIWorld introduces Geometric Rotary Position
-          Embedding, Cross-View Attention, and Latent 3D-REPA to produce 3D-consistent multi-view world simulations.
+          World foundation models have emerged as powerful simulators of physical environments, yet they predominantly
+          operate in a single-view setting and lack the multi-view 3D consistency required by robotic manipulation.
+          Robotic systems rely on egocentric, eye-to-hand, and wrist-mounted cameras to capture complementary viewpoints
+          for policy learning, but current multi-view world models often concatenate view tokens without explicit
+          geometric reasoning, leading to cross-view object drift, depth inconsistency, and texture misalignment.
+          PAIWorld addresses these failures through two coupled technical pillars: an inter-view communication pathway
+          and a geometric learning signal. Geometry-Aware Cross-View Attention and Geometric Rotary Position Embedding
+          establish geometry-aware feature exchange across views, while Latent 3D-REPA distills 3D-aware features from
+          frozen foundation models to keep exchanged content 3D-consistent. Built on a DiT-based world foundation model,
+          PAIWorld ranks 1st on the WorldArena leaderboard and 2nd on the AgiBot-Challenge2026 leaderboard, while
+          supporting downstream applications including model-based planning, world action models, and multi-view policy
+          post-training.
         </p>
 
         <div class="metric-grid" aria-label="Key results">
@@ -167,44 +173,48 @@
         <div class="section-heading">
           <h2>Method</h2>
           <p>
-            PAIWorld keeps the pretrained world model intact at initialization and adds lightweight modules that let
-            views exchange information in a shared geometric reference frame.
+            PAIWorld injects 3D consistency into flow-matching world foundation models through two coupled pillars: an
+            inter-view communication pathway and a geometric training objective.
           </p>
         </div>
 
         <figure class="figure-panel">
           <img src="./static/images/paiworld/pipeline.png" alt="PAIWorld framework pipeline">
           <figcaption>
-            The framework combines flow matching, multi-view DiT generation, Geo-RoPE camera encoding, cross-view
-            attention, and latent 3D representation alignment.
+            Overview of the PAIWorld framework. Built on a DiT-based flow matching backbone, PAIWorld rests on two
+            technical pillars realized by three components. The inter-view pathway combines Geometry-Aware Cross-View
+            Attention and Geometric Rotary Position Embedding (Geo-RoPE) to enable communication across views while
+            biasing attention toward geometrically corresponding tokens. The geometric objective uses Latent 3D-REPA to
+            align intermediate DiT representations with 3D-aware features from Depth Anything 3, encouraging the
+            exchanged information to remain 3D-consistent.
           </figcaption>
         </figure>
 
-        <p class="method-module-intro">Three modules for multi-view 3D consistency.</p>
+        <p class="method-module-intro">Two technical pillars realized by three lightweight components.</p>
 
         <div class="method-grid">
           <article>
             <span class="method-index">01</span>
-            <h3>Geometric Rotary Position Embedding</h3>
+            <h3>Geometry-Aware Cross-View Attention</h3>
             <p>
-              Geo-RoPE encodes pixel-level camera rays and view-level extrinsic poses into attention, giving tokens a
-              common geometric coordinate system across cameras.
+              Cross-view attention blocks open an explicit communication pathway across viewpoints, letting each view
+              exchange features with the others during world-model generation.
             </p>
           </article>
           <article>
             <span class="method-index">02</span>
-            <h3>Cross-View Attention</h3>
+            <h3>Geometric Rotary Position Embedding</h3>
             <p>
-              Dedicated inter-view attention blocks let each viewpoint query all other views at the same time step,
-              resolving object drift and view-local hallucinations.
+              Geo-RoPE encodes camera ray directions and extrinsic poses into attention, biasing the inter-view pathway
+              toward geometrically corresponding tokens.
             </p>
           </article>
           <article>
             <span class="method-index">03</span>
             <h3>Latent 3D-REPA</h3>
             <p>
-              Intermediate DiT features are aligned with frozen 3D foundation model features, so cross-view communication
-              is guided by geometric token relations rather than superficial texture matching.
+              Intermediate DiT features are aligned with 3D-aware features from Depth Anything 3, supplying the
+              geometric objective that makes exchanged content 3D-consistent.
             </p>
           </article>
         </div>
@@ -753,7 +763,7 @@
         <section class="demo-group">
           <div class="demo-group-heading">
             <h3>AgiBot-Challenge</h3>
-            <p>World model generation, input-generation comparison, and scene-consistency examples.</p>
+            <p>World model generation, GT image/depth comparison, and multi-seed consistency examples.</p>
           </div>
 
           <div class="demo-subgroup">
@@ -784,25 +794,25 @@
           </div>
 
           <div class="demo-subgroup">
-            <h4>Input generation comparison</h4>
+            <h4>GT Image and Depth Comparison</h4>
             <div class="gif-grid">
               <article>
-                <img src="./hyx/agi-challenge/input-gen-comparison-1.gif" alt="AgiBot-Challenge input generation comparison 1">
+                <img src="./hyx/agi-challenge/input-gen-comparison-1.gif" alt="AgiBot-Challenge GT image and depth comparison 1">
               </article>
               <article>
-                <img src="./hyx/agi-challenge/input-gen-comparison-2.gif" alt="AgiBot-Challenge input generation comparison 2">
+                <img src="./hyx/agi-challenge/input-gen-comparison-2.gif" alt="AgiBot-Challenge GT image and depth comparison 2">
               </article>
             </div>
           </div>
 
           <div class="demo-subgroup">
-            <h4>Scene consistency</h4>
+            <h4>Multi-Seed Generation Consistency</h4>
             <div class="gif-grid">
               <article>
-                <img src="./hyx/agi-challenge/multi-sample-scene-consistence.gif" alt="AgiBot-Challenge scene consistency example 1">
+                <img src="./hyx/agi-challenge/multi-sample-scene-consistence.gif" alt="AgiBot-Challenge multi-seed generation consistency example 1">
               </article>
               <article>
-                <img src="./hyx/agi-challenge/multi-sample-scene-consistence-2.gif" alt="AgiBot-Challenge scene consistency example 2">
+                <img src="./hyx/agi-challenge/multi-sample-scene-consistence-2.gif" alt="AgiBot-Challenge multi-seed generation consistency example 2">
               </article>
             </div>
           </div>
@@ -823,7 +833,7 @@
           </article>
           <article>
             <h3>Contributors</h3>
-            <p>Wancheng Feng, Shilong Zou, Hewen Xiao, Ziqiao Zhou, Kaiyun Huang, Zhiyu Peng, Juzhan Xu, Yifei Huang, Douhui Wu, Yan Zhang, Kexu Cheng, Chunhe Song, Yunji Chen, Bin Wu, Haibin Yu</p>
+            <p>Wancheng Feng, Shilong Zou, Hewen Xiao, Ziqiao Zhou, Kaiyun Huang, Zhiyu Peng, Juzhan Xu, Hang Zhao, Chenyang Zhu, Renjiao Yi, Yifei Huang, Douhui Wu, Yan Zhang, Kexu Cheng, Chunhe Song, Yunzhi Xue, Xiuhong Zhang, Leitao Guo, Yunji Chen, Bin Wu, Haibin Yu</p>
           </article>
           <article>
             <h3>Corresponding Author</h3>
@@ -841,7 +851,7 @@
         </div>
         <pre><code>@article{paiworld2026,
   title={PAIWorld: 3D-Consistent Multi-View World Foundation Model for Robotic Manipulation},
-  author={The PAI Lab},
+  author={The PAIWorld Team},
   journal={Manuscript},
   year={2026}
 }</code></pre>
