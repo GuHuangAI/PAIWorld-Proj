@@ -837,16 +837,6 @@ video {
   line-height: 1.6;
 }
 
-.footer {
-  padding: 2rem 1.5rem;
-  color: #d4dcda;
-  background: #101a21;
-}
-
-.footer p {
-  margin: 0.25rem 0;
-}
-
 @media (max-width: 900px) {
   .hero-navbar {
     padding-top: 0.45rem;
